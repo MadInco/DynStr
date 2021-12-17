@@ -4,21 +4,23 @@
 #include <stdio.h>
 #include <string>
 #include <list>
-
 using namespace std;
-
 char c;
 //Эта функция была нужна для проверки операции сравнения строк из двух символов в реализации класса String и нового класса DynStr
-//Чтобы убедиться, что операторы сравнения для нового класса работают корректно
+//Чтобы убедиться, что операторы сравнения для нового класса работают корректно.
 void TestCompare() {
     char *s1, *s2;
     string str1, str2;
-    string alp[28] = {""," ", "a","b","c","d","e","f","g","h","i","j","k","l","m","n","o","p","q","r","s","t","u","v","w","x","y","z" };
+    string alp[28] = {""," ", "a","b","c","d","e","f","g","h","i","j","k","l","m","n","o","p","q","r","s","t","u","v","w","x","y","z"};
     //                0   1    2   3   4   5   6   7   8   9  10  11  12  13  14  15  16  17  18  19  20  21  22  23  24  25  26  27
+    /*string alp[28+24] = {"a","b","c","d","e","f","g","h","i","j","k","l","m","n","o","p","q","r","s","t","u","v","w","x","y","z",
+                            "А","B","C","D","E","F","G","H","I","J","K","L","M","N","O","P","Q","R","S","T","U","V","W","X","Y","Z"};
+    //                0   1    2   3   4   5   6   7   8   9  10  11  12  13  14  15  16  17  18  19  20  21  22  23  24  25  26  27*/
     s1 = new char[2+1];
     s2 = new char[2+1];
     unsigned int i, j, k, l, err, errL, errG, countall;
     unsigned int size = 28;
+    //unsigned int size = 28+24;
     bool boolerrL, boolerrG, boolImage;
     unsigned int ind;
 
@@ -26,8 +28,7 @@ void TestCompare() {
     err = errL = errG = 0;
     countall = size * size * size * size;//все случаи
     countall = (countall / 2) + (countall % 2);//из-за симметричности можно расмотреть лишь половину случаев
-    printf("\n--------------------------------------------------------------");
-    printf("\nDo you need to draw error cases in this Test?(y/n)");
+    printf("\n--------------------------------------------------------------\nDo you need to draw error cases in this Test?(y/n)");
     c = '\0';
     scanf("%2c", &c);
     if (c == 'y') {
@@ -54,6 +55,7 @@ void TestCompare() {
         sprintf(s2, str2.c_str());
         DynStr dstr1(s1);
         DynStr dstr2(s2);
+        //если будут символы типа "ab" < "aС", то LEG определит верно, а "str1 < str2", т.к. коды заглавных символов меньше прописных 
         boolerrL = ((str1 < str2) != (dstr1 < dstr2));
         boolerrG = ((str1 > str2) != (dstr1 > dstr2));
         if (boolerrL || boolerrG) {
@@ -78,9 +80,12 @@ void TestCompare() {
     delete[] s1;
     delete[] s2;
 }
-
-int main(int argc, char* argv[])
-{
+string print(DynStr d1) {
+    char ret[255];
+    printf(ret, "stroka is %15s, length is %2d, address is %p, &1-el is %p ", d1.getStr(), d1.getLength(), &d1, &*d1.getStr());
+    return (string)ret;
+};
+int main(int argc, char* argv[]){
     list<DynStr> L;
     bool cmd = false;
     c = '\0';
@@ -92,51 +97,44 @@ int main(int argc, char* argv[])
                 cmd = true;
                 printf("\nReading from cmd...");
                 for (int i = 1; i < argc; i++) {
-                    printf("\nSymbols in 'argc[%d]' are: '%s'", i, argv[i]);
-                    L.push_back(move(argv[i]));
+                    printf("\nSymbols in 'argc[%d]' are: '%s' pushed back", i, argv[i]);
+                    L.push_back(argv[i]);
                 }
                 L.sort(greater<DynStr>());
-                //L.reverse();
                 printf("\n...Reverse-Sorted List...");
                 int sizeL = (int)L.size();
-                for (int i = 1; i <= sizeL;i++) {
-                   printf("\n||| %s",L.front().GetStr());
-                   L.pop_front();
+                while ((int)L.size()) {
+                    printf("\n|  %20s", L.front().getStr());
+                    L.pop_front();
                 }
                 printf("\n...Drawing is End...");
             }
         }
         if(!cmd){
-            printf("Activate Test compare String/DynStr?(y/n)");
+            printf("Activate Test compare String/DynStr?(y/n)\n");
             c = '\0';
             scanf("%2c", &c);
             if (c == 'y') {
                 TestCompare();       
             }
             else {
-                char* sym;
-                DynStr ds[4];
-                printf("\nLets draw default DynStr's");
-                ds[0] = "Lets ";
-                sym = new char[strlen("draw ") + 1];
-                strcpy(sym,"draw ");
-                ds[1] = sym;
-                ds[2] = ds[0] + ds[1];
-                ds[3] = ds[2]+" HAHAHA ds[2] will be moved ";
-                for (int i = 0; i < 4; i++) {
-                    printf("\n ds[%d]|||%10s|||",i, ds[i].GetStr());
-                }
-                ds[3] = move(ds[2]);
-                printf("\nAfter ds[2] moving in ds[3]");
-                for (int i = 0; i < 4; i++) {
-                    printf("\n ds[%d]|||%10s|||", i, ds[i].GetStr());
-                }
-                delete[] sym;
+                DynStr nul;
+                char sym[] = "checklength1";
+                char sym2[] = "checklength2";
+                DynStr strM("checkmove");
+                DynStr plus, plus3, plus2, plus4;
+                DynStr str3(sym);
+                plus = strM+str3;
+                plus3 = DynStr(sym) + DynStr(sym2);
+                plus2 = move(strM) + move(strM);
+                DynStr str2(DynStr::strlen(sym)), str4(move(sym2)), str5("checklength3"), str6(str2), str7(str3);
             }
         }
     }
     catch (...) {
         printf("EXCEPTION!!!\n");
     }
+    printf("Press any key!!!\n");
+    getchar();
     return 0;
 }
