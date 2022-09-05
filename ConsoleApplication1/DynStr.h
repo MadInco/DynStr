@@ -6,7 +6,7 @@ class DynStr {
 private:
     char* stroka;
     uint length;//Длина строки без 0-символа
-    bool isErased = false;
+    
     //Заменяет n символов str на smb. Если n больше длины, то n=длина
     static void strsmb(char* str, char smb = '\0', int n = -1) {
         int len;
@@ -19,7 +19,7 @@ private:
         }
     }
     //Длина символьной константной строки без 0-символа
-    static uint strlen(const char* str)    {
+    static uint _strlen(const char* str)    {
         uint length = 0;
         while (*str++)
             ++length;
@@ -46,36 +46,38 @@ private:
         return (dst);
     }
     //Перевод символов src в нижний регистр
-    static char* strlow(const char* src){
-        uint lenS = strlen(src);
-        uint len0 = lenS + 1;
-        char* ret = new char[len0];
-        uint i;
-        for (i = 0; i < len0; i++) {
+    static void strlow(const char* src, char * dst){
+        uint lenS = _strlen(src);
+        uint len0 = lenS + 1;        
+        char* ret = dst;
+
+        for (uint i = 0; i < len0; i++) {
             if (src[i] >= 65 && src[i] <= 91)
                 ret[i] = (int)src[i] + 32;
             else
                 ret[i] = src[i];
         }
         ret[lenS] = '\0';
-        return ret;
     }
     //Статическая функция  для операторов сравнения.Принимает на вход два набора символов.
     //От слов Less,Equal,Great
     //Возвращает -1, если первая строка меньше другой по алфавиту(Лексикографический), 0 - равны, 1 - первая больше другой по алфавиту
     static int _LEG(const char* str1, const char* str2) {
         int ret = 0;
-        char* op1 = strlow(str1);
-        char* op2 = strlow(str2);
+        char* op1 = new char[_strlen(str1) + 1];
+        char* op2 = new char[_strlen(str2) + 1];
+        strlow(str1, op1);
+        strlow(str2, op2);
         char* c1 = op1;
         char* c2 = op2;
+
         while (!(ret = *c1 - *c2) && *c2)
             ++c1, ++c2;
         if (ret < 0)
             ret = -1;
         else if (ret > 0)
             ret = 1;
-        delete[] op1;//here check
+        delete[] op1;
         delete[] op2;
         return(ret);
     }
@@ -87,36 +89,18 @@ public:
         stroka = new char[len0];//Скорее всего, здесь будет мусор
         stroka[length] = '\0';
     }
-    //Конструктор копирования 
-    DynStr(char* str1) {
-        length =  strlen(str1);
-        uint len0 = length + 1;
-        stroka = new char[len0];
-        //stroka[length] = '\0';
-        strcpy(stroka, str1);
-    }
     //Конструктор копирования константный
     DynStr(const char* str1) {
-        length = strlen(str1);
+        length = _strlen(str1);
         uint len0 = length + 1;
         stroka = new char[len0];
-        //stroka[length] = '\0';
         strcpy(stroka, str1);
-    }
-    //Конструктор копирования 
-    DynStr(DynStr& d) {
-        length =  strlen(d.stroka);
-        uint len0 = length + 1;
-        stroka = new char[len0];
-        //stroka[length] = '\0';
-        strcpy(stroka, d.stroka);
     }
     //Конструктор копирования константный
     DynStr(const DynStr& d) {
         uint len0 = d.length + 1;
         stroka = new char[len0];
         length = d.length;
-        //stroka[length] = '\0';
         strcpy(stroka, d.stroka);
     }
     //Конструктор перемещения
@@ -124,16 +108,11 @@ public:
        length = dMove.length;
        uint len0 = length + 1;
        stroka = new char[len0];
-       //stroka[length] = '\0';
        strcpy(stroka, dMove.getStr());
-       dMove.~DynStr();
     }
     virtual ~DynStr() {
-        if (!isErased){
             if (stroka != nullptr) {
                 delete[] stroka;
-                isErased = true;
-            }
         }
     }
     //оператор присваивание копирования
@@ -145,21 +124,7 @@ public:
         length = d.length;
         uint len0 = length + 1;
         stroka = new char[len0];
-        //stroka[length] = '\0';
         strcpy(stroka,d.stroka);
-        return *this;
-    }
-    //оператор присваивание копирования
-    DynStr& operator = (char* d) {
-        if (d == getStr())
-            return *this;
-        if (stroka)//stroka
-            delete[] stroka;
-        length = strlen(d);
-        uint len0 = length + 1;
-        stroka = new char[len0];
-        //stroka[length] = '\0';
-        strcpy(stroka, d);
         return *this;
     }
     //оператор присваивание перемещения
@@ -171,9 +136,7 @@ public:
         length = dMove.length;
         uint len0 = length + 1;
         stroka = new char[len0];
-        //stroka[length] = '\0';
         strcpy(stroka, dMove.getStr());
-        dMove.~DynStr();
         return *this;
     }
     //Сравнивает первый операнд со вторым
@@ -251,7 +214,7 @@ public:
     //Статическая публичная функция 
     //Длина символьной строки
     static uint strlen(char* str) {
-      return strlen((const char*)str);
+      return _strlen((const char*)str);
     }
 };
 
@@ -273,7 +236,5 @@ DynStr operator + (DynStr&& d1, DynStr&& d2) {
     DynStr::strcat(strRet, d2.getStr());
     DynStr ret(strRet);
     delete[] strRet;
-    d1.~DynStr();
-    d2.~DynStr();
     return ret;
 };
